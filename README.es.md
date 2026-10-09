@@ -7,7 +7,7 @@ Por [@marcogonzalo](https://github.com/marcogonzalo) y [otros contribuidores](ht
 [![build by developers](https://img.shields.io/badge/build_by-Developers-blue)](https://4geeks.com)
 [![4Geeks Academy](https://img.shields.io/twitter/follow/4geeksacademy?style=social&logo=x)](https://x.com/4geeksacademy)
 
-_These instructions are [available in English](./README.md)._
+_Estas instrucciones también están disponibles en [inglés](./README.md)._
 
 **Antes de empezar**: 📗 [Lee las instrucciones](https://4geeks.com/es/lesson/como-comenzar-un-proyecto-de-codificacion) sobre cómo comenzar un proyecto de programación.
 

@@ -1,136 +1,136 @@
-# Verificacion del proyecto
+# Project Verification
 
-- **Fecha de revision:** 2026-10-09
-- **Revision/commit:** no registrado en este documento.
-- **Alcance:** overview funcional, stack, ejecucion, arquitectura, datos, endpoints y evidencia localizada en el repositorio.
-- **Metodo:** inspeccion estatica de codigo, configuracion y tests existentes.
-- **Tests ejecutados durante esta revision:** ninguno. Las referencias a tests indican que existen, no que hayan sido ejecutados.
+- **Review date:** 2026-10-09
+- **Revision/commit:** not recorded.
+- **Scope:** product overview, stack, execution, architecture, data, endpoints, and repository evidence.
+- **Method:** static inspection of source code, configuration, and existing tests.
+- **Tests executed for this review:** none. Test references indicate that tests exist, not that they were run.
 
-## 1. Overview funcional del producto
+## 1. Product overview
 
-El proyecto es un dashboard de metricas financieras de demostracion. Presenta ingresos, gastos, beneficio neto y margen de beneficio, junto con graficas mensuales de ingresos frente a gastos y evolucion del margen.
+This project is a demo financial metrics dashboard. It presents total income, expenses, net profit, and profit margin, alongside monthly income-vs-expense and margin charts.
 
-El perfil de usuario no esta formalmente especificado en el repositorio. Por el tipo de indicadores, podria servir a responsables financieros, propietarios de negocios o perfiles ejecutivos que necesiten una vista resumida; esto es una inferencia, no un requisito documentado.
+The repository does not formally specify a target user persona. Based on the metrics, it might serve finance leads, business owners, or executives who need a summary view; this is an inference, not a documented requirement.
 
-El frontend muestra los datos recibidos de la API, pero no ofrece carga de archivos, edicion de movimientos, filtros de usuario, seleccion de periodo ni exportacion. No es un sistema conectado a datos financieros reales.
+The frontend displays API data but does not provide file upload, movement editing, user filters, period selection, or export. It is not connected to real financial data.
 
-## 2. Stack tecnologico hallado
+## 2. Technology stack
 
-| Capa | Tecnologia | Evidencia / version declarada |
+| Layer | Technology | Evidence / declared version |
 |---|---|---|
 | Frontend | React, React DOM, TypeScript | `frontend/package.json`: React `^19.2.4`, TypeScript `~6.0.2` |
-| Servidor y build frontend | Vite, plugin React | `frontend/package.json`: Vite `^8.0.4`; configuracion en `frontend/vite.config.ts` |
-| Estilos | Tailwind CSS y plugin Vite | `frontend/package.json`: Tailwind `^4.2.2`, `@tailwindcss/vite` `^4.2.2` |
-| Graficas e iconos | Recharts, Lucide React | `frontend/package.json`: Recharts `^3.8.1`, Lucide React `^1.8.0` |
-| Backend/API | Python, FastAPI, Uvicorn | Imagen `python:3.13-slim`; paquetes en `backend/requirements.txt`. FastAPI y Uvicorn no tienen version fijada ahi. |
-| Validacion de modelos | Pydantic | Los modelos estan definidos en `backend/app/routes.py`; llega como dependencia de FastAPI y no aparece listado directamente en `requirements.txt`. |
-| Contenedores | Docker y Docker Compose | `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml` |
-| Tests | pytest, Vitest | pytest en `backend/requirements.txt`; Vitest y comandos npm en `frontend/package.json` |
+| Frontend server/build | Vite, React plugin | `frontend/package.json`: Vite `^8.0.4`; configuration in `frontend/vite.config.ts` |
+| Styling | Tailwind CSS and Vite plugin | `frontend/package.json`: Tailwind `^4.2.2`, `@tailwindcss/vite` `^4.2.2` |
+| Charts/icons | Recharts, Lucide React | `frontend/package.json`: Recharts `^3.8.1`, Lucide React `^1.8.0` |
+| Backend/API | Python, FastAPI, Uvicorn | `python:3.13-slim` image; packages in `backend/requirements.txt`. FastAPI and Uvicorn versions are not pinned there. |
+| Model validation | Pydantic | Models are defined in `backend/app/routes.py`; Pydantic is an indirect FastAPI dependency and is not listed directly in `requirements.txt`. |
+| Containers | Docker and Docker Compose | `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml` |
+| Tests | pytest, Vitest | pytest in `backend/requirements.txt`; Vitest and npm scripts in `frontend/package.json` |
 
-## 3. Frontend y backend
+## 3. Frontend and backend
 
-- **Frontend:** `frontend/src/App.tsx` obtiene los movimientos de `/api/metrics`, calcula localmente KPI y agregados mensuales mediante `frontend/src/lib/financial-utils.ts`, y renderiza tarjetas y graficas con componentes en `frontend/src/components/dashboard/`.
-- **Backend:** `backend/app/main.py` crea la aplicacion FastAPI; `backend/app/routes.py` define modelos, generacion de datos, calculos y rutas HTTP. No se encontro capa de persistencia ni base de datos.
+- **Frontend:** `frontend/src/App.tsx` fetches movements from `/api/metrics`, computes KPI and monthly aggregates through `frontend/src/lib/financial-utils.ts`, and renders dashboard cards/charts from `frontend/src/components/dashboard/`.
+- **Backend:** `backend/app/main.py` creates the FastAPI app; `backend/app/routes.py` defines models, data generation, calculations, and HTTP routes. No persistence layer or database was found.
 
-## 4. Arquitectura y comunicacion
+## 4. Architecture and communication
 
 ```mermaid
 flowchart LR
-    B[Navegador] -->|GET /api/metrics| R[React: App]
-    R -->|peticion relativa /api| V[Vite proxy]
-    V -->|HTTP a backend:8000| F[FastAPI]
-    F --> G[Generador de movimientos sinteticos]
+    B[Browser] -->|GET /api/metrics| R[React App]
+    R -->|relative /api request| V[Vite proxy]
+    V -->|HTTP to backend:8000| F[FastAPI]
+    F --> G[Synthetic movement generator]
     G --> F
     F -->|JSON| V
     V --> R
-    R --> K[Calculo local de KPI y agregados]
-    K --> UI[Tarjetas y graficas]
+    R --> K[Client-side KPI and aggregation]
+    K --> UI[Cards and charts]
 ```
 
-`frontend/src/App.tsx` usa `VITE_API_BASE_URL` si esta definida; por defecto usa una ruta relativa. `frontend/vite.config.ts` reenvia `/api` a `http://backend:8000`, el nombre del servicio backend en Compose. FastAPI configura CORS con origenes, metodos y headers comodin en `backend/app/main.py`.
+`frontend/src/App.tsx` uses `VITE_API_BASE_URL` when defined and a relative URL by default. `frontend/vite.config.ts` proxies `/api` to `http://backend:8000`, the backend service name in Compose. FastAPI configures wildcard origins, methods, and headers in `backend/app/main.py`.
 
-El frontend actual solo consulta `GET /api/metrics`. Los endpoints agregados y de segmentacion documentados mas abajo no estan conectados a esta interfaz.
+The current frontend calls only `GET /api/metrics`. The additional aggregation and segment routes listed below are not wired into this UI.
 
-## 5. Datos y flujo
+## 5. Data and flow
 
-- `generate_mock_movements(seed=42)` crea 360 movimientos sinteticos, 30 por cada mes del calendario, con tipos de operacion income/outcome, categorias y segmentos B2B/B2C.
-- La semilla hace reproducibles los valores aleatorios. Las fechas se asignan a los doce meses completos anteriores al mes actual; por tanto, el rango de fechas depende de cuando se ejecuta el backend.
-- Los datos se generan en memoria al atender las rutas. No se encontro almacenamiento persistente, importacion de CSV/Excel ni conexion a una fuente financiera externa.
-- En cada carga inicial, el frontend solicita la lista y calcula los KPI y agregados en el cliente. Las rutas de resumen, comparacion, alertas y categorias top se calculan en backend, pero no las consume la UI actual.
-- El encabezado del dashboard usa la etiqueta fija `2024 - Full Year` (`frontend/src/App.tsx`), aunque las fechas de los datos generados dependen de la fecha de ejecucion.
+- `generate_mock_movements(seed=42)` creates 360 synthetic movements, 30 for each calendar month, with income/outcome types, categories, and B2B/B2C segments.
+- The seed makes random values reproducible. Dates are assigned to the twelve complete months before the current month, so the date range depends on when the backend runs.
+- Data is generated in memory when routes are handled. No persistent storage, CSV/Excel import, or external financial data source was found.
+- On initial load, the frontend fetches the movement list and computes KPI/chart aggregates in the client. The backend also calculates summaries, comparisons, alerts, and top categories, but the current UI does not consume those routes.
+- The dashboard header uses the fixed label `2024 - Full Year` (`frontend/src/App.tsx`), although generated data dates depend on runtime date.
 
-## 6. Como ejecutar
+## 6. How to run
 
-### Requisitos
+### Requirements
 
-Docker con Docker Compose disponible.
+Docker and Docker Compose.
 
-### Arrancar
+### Start
 
-Desde la raiz del repositorio:
+From the repository root:
 
 ```bash
 docker compose up --build
 ```
 
-### URLs locales
+### Local URLs
 
 - Dashboard: <http://localhost:5173>
 - API: <http://localhost:8000>
-- Swagger UI de FastAPI: <http://localhost:8000/docs>
-- Esquema OpenAPI: <http://localhost:8000/openapi.json>
+- FastAPI Swagger UI: <http://localhost:8000/docs>
+- OpenAPI schema: <http://localhost:8000/openapi.json>
 
-FastAPI expone Swagger UI y OpenAPI automaticamente. El backend tambien arranca Uvicorn con autoreload y debugpy en el puerto 5678, segun `backend/Dockerfile`.
+FastAPI automatically exposes Swagger UI and OpenAPI. The backend also starts Uvicorn with autoreload and debugpy on port 5678, as configured in `backend/Dockerfile`.
 
-### Ejecutar tests (no ejecutados en esta revision)
+### Run tests (not executed for this review)
 
-Con los servicios levantados:
+With the services running:
 
 ```bash
 docker compose exec backend pytest
 docker compose exec frontend npm test
 ```
 
-Los comandos corresponden a las dependencias del backend y al script `test` de `frontend/package.json`.
+These commands correspond to backend dependencies and the frontend `test` script in `frontend/package.json`.
 
-## 7. Catalogo de endpoints
+## 7. Endpoint catalog
 
-Todos los endpoints siguientes estan declarados en `backend/app/routes.py`. El estado de verificacion califica la coincidencia entre la descripcion y el codigo inspeccionado; no afirma que se hayan probado en ejecucion. La cobertura indicada identifica tests existentes, no ejecutados durante esta revision.
+All endpoints below are defined in `backend/app/routes.py`. Verification status means the description was checked against the code; it does not mean the route was exercised at runtime. Test coverage refers to tests present in the repo, not tests run for this review.
 
-| Metodo y ruta | Comportamiento implementado | Parametros | Consumido por frontend | Estado de implementacion | Verificacion / evidencia de test |
+| Method and route | Implemented behavior | Parameters | Used by frontend | Implementation status | Verification / test evidence |
 |---|---|---|---|---|---|
-| `GET /health` | Devuelve `{"status":"ok"}`. | Ninguno. | No | Implementado | Verificado en codigo. Test: `test_health_endpoint_returns_ok`. |
-| `GET /api/metrics` | Genera movimientos, aplica filtros opcionales y devuelve la lista ordenada por fecha. | `start_date`, `end_date`, `category`, `operation_type`. | Si | Implementado | Verificado en codigo. Tests de fechas, categoria y operacion. |
-| `GET /api/metrics/facets` | Devuelve tipos de operacion, tipos de negocio, categorias y fechas minima/maxima de los movimientos generados. | Ninguno. | No | Implementado | Verificado en codigo. Test: `test_metrics_facets_returns_filter_options_and_date_range`. |
-| `GET /api/metrics/summary` | Agrupa por dia, semana ISO o mes y calcula ingresos, gastos y neto por periodo. | `group_by` (`day`, `week`, `month`; default `month`), fechas, categoria, operacion y `business_type`. | No | Implementado | Verificado en codigo. Tests de resumen mensual y semanal. |
-| `GET /api/metrics/categories/top` | Suma importes por categoria para el tipo de operacion seleccionado y devuelve los mayores primero. | `operation_type` (default `outcome`), `limit` (default 5, entre 1 y 20), fechas y `business_type`. | No | Implementado | Verificado en codigo. Test: `test_top_categories_returns_limited_sorted_categories`. |
-| `GET /api/metrics/comparison` | Calcula el neto del rango requerido y lo compara con el intervalo contiguo anterior de igual numero de dias, contando ambos extremos. `delta_pct` es null si el neto anterior es cero. | Requeridos: `start_date`, `end_date`; opcional: `business_type`. | No | Implementado | Verificado en codigo. Test `test_metrics_comparison_returns_delta_fields` verifica las claves de respuesta, no toda la formula. |
-| `GET /api/metrics/alerts` | Agrupa gastos y marca periodos cuyo gasto supera estrictamente el umbral respecto al promedio de todos los periodos anteriores del conjunto filtrado. | `threshold` (default 0.3, minimo 0), `group_by` (default `month`), fechas y `business_type`. | No | Implementado | Verificado en codigo. Test: `test_metrics_alerts_returns_anomaly_candidates`; valida la forma si hay resultados. |
-| `GET /api/metrics/b2b` | Filtra movimientos B2B, aplica filtros comunes y ordena por fecha. | Fechas, categoria y operacion. | No | Implementado | Verificado en codigo. Tests de B2B y combinacion de filtros. |
-| `GET /api/metrics/b2c` | Filtra movimientos B2C, aplica filtros comunes y ordena por fecha. | Fechas, categoria y operacion. | No | Implementado | Verificado en codigo. Test: `test_b2c_endpoint_only_returns_b2c_records`. |
+| `GET /health` | Returns `{"status":"ok"}`. | None. | No | Implemented | Verified in code. Test: `test_health_endpoint_returns_ok`. |
+| `GET /api/metrics` | Generates movements, applies optional filters, and returns records sorted by date. | `start_date`, `end_date`, `category`, `operation_type`. | Yes | Implemented | Verified in code. Tests cover dates, category, and operation. |
+| `GET /api/metrics/facets` | Returns available operation types, business types, categories, and minimum/maximum dates. | None. | No | Implemented | Verified in code. Test: `test_metrics_facets_returns_filter_options_and_date_range`. |
+| `GET /api/metrics/summary` | Groups movements by day, ISO week, or month and calculates income, outcome, and net per period. | `group_by` (`day`, `week`, `month`; default `month`), dates, category, operation, and `business_type`. | No | Implemented | Verified in code. Monthly and weekly summary tests exist. |
+| `GET /api/metrics/categories/top` | Sums amounts by category for the selected operation type and returns the largest totals first. | `operation_type` (default `outcome`), `limit` (default 5, range 1-20), dates, and `business_type`. | No | Implemented | Verified in code. Test: `test_top_categories_returns_limited_sorted_categories`. |
+| `GET /api/metrics/comparison` | Calculates net for the requested range and compares it with the immediately preceding interval of equal day count, inclusive of both ends. `delta_pct` is null if previous net is zero. | Required: `start_date`, `end_date`; optional: `business_type`. | No | Implemented | Verified in code. `test_metrics_comparison_returns_delta_fields` checks response keys, not the full calculation. |
+| `GET /api/metrics/alerts` | Groups expenses and reports periods whose outcome strictly exceeds the threshold against the average of all prior periods in the filtered set. | `threshold` (default 0.3, minimum 0), `group_by` (default `month`), dates, and `business_type`. | No | Implemented | Verified in code. `test_metrics_alerts_returns_anomaly_candidates` checks shape when results exist. |
+| `GET /api/metrics/b2b` | Filters B2B movements, applies common filters, and sorts by date. | Dates, category, and operation. | No | Implemented | B2B and combined-filter tests exist. |
+| `GET /api/metrics/b2c` | Filters B2C movements, applies common filters, and sorts by date. | Dates, category, and operation. | No | Implemented | Test: `test_b2c_endpoint_only_returns_b2c_records`. |
 
-## 8. Evidencias en el repositorio
+## 8. Repository evidence
 
-| Area | Evidencia principal |
+| Area | Primary evidence |
 |---|---|
-| Aplicacion FastAPI y CORS | `backend/app/main.py` |
-| Modelos, generador y endpoints API | `backend/app/routes.py` |
-| Pruebas API | `backend/tests/test_routes.py` |
-| Arranque y fetch de datos frontend | `frontend/src/App.tsx` |
-| Tipos de datos frontend | `frontend/src/lib/financial-types.ts` |
-| Calculos KPI y mensuales | `frontend/src/lib/financial-utils.ts` |
-| Tests de calculos frontend | `frontend/src/lib/financial-utils.test.ts` |
-| Proxy de Vite | `frontend/vite.config.ts` |
-| Dependencias frontend | `frontend/package.json` |
-| Dependencias backend | `backend/requirements.txt` |
-| Contenedores y puertos | `docker-compose.yml`, `frontend/Dockerfile`, `backend/Dockerfile` |
-| Instrucciones del proyecto | `README.md`, `README.es.md` |
+| FastAPI app and CORS | `backend/app/main.py` |
+| Models, generator, and API endpoints | `backend/app/routes.py` |
+| API tests | `backend/tests/test_routes.py` |
+| Frontend entry and data fetch | `frontend/src/App.tsx` |
+| Frontend data types | `frontend/src/lib/financial-types.ts` |
+| KPI and monthly calculations | `frontend/src/lib/financial-utils.ts` |
+| Frontend calculation tests | `frontend/src/lib/financial-utils.test.ts` |
+| Vite proxy | `frontend/vite.config.ts` |
+| Frontend dependencies | `frontend/package.json` |
+| Backend dependencies | `backend/requirements.txt` |
+| Containers and ports | `docker-compose.yml`, `frontend/Dockerfile`, `backend/Dockerfile` |
+| Contributor instructions | `README.md`, `README.es.md`, `AGENTS.md` |
 
-## 9. Hallazgos y limites
+## 9. Findings and limitations
 
-- **Datos demostrativos:** las metricas no proceden de datos reales ni persisten entre peticiones; el generador esta en `backend/app/routes.py`.
-- **Cobertura de la interfaz:** la UI consume solo `/api/metrics`; las rutas adicionales estan implementadas en backend, pero no expuestas como interacciones del dashboard.
-- **Periodo de cabecera estatico:** se muestra `2024 - Full Year` mientras que el generador usa fechas relativas a la fecha de ejecucion.
-- **Sin ingestion de datos:** no se encontro carga de archivos, formulario de movimientos ni integracion con sistemas financieros.
-- **CORS permisivo:** `backend/app/main.py` permite origenes, metodos y headers comodin; revisar esta configuracion antes de exponer el servicio fuera del entorno de desarrollo.
-- **Ejecucion no comprobada en esta revision:** los tests existen, pero no se corrieron; no se afirma aqui que pasen ni que los contenedores se hayan levantado.
+- **Demo data:** metrics are not based on real records and are not persisted; the generator is in `backend/app/routes.py`.
+- **Partial UI coverage:** the UI consumes only `/api/metrics`; other backend routes are implemented but not exposed as dashboard interactions.
+- **Static period label:** the UI displays `2024 - Full Year` while generated dates depend on runtime date.
+- **No data ingestion:** no file upload, movement form, or financial-system integration was found.
+- **Permissive CORS:** `backend/app/main.py` allows wildcard origins, methods, and headers; review before exposing outside development.
+- **Execution not checked for this review:** tests exist but were not run; no claim is made that they pass or that containers were started.
