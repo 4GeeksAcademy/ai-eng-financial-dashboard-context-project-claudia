@@ -1,0 +1,22 @@
+{
+  "name": "Financial Metrics Dashboard",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [5173, 8000],
+  "portsAttributes": {
+    "5173": {
+      "label": "Dashboard",
+      "onAutoForward": "openBrowser"
+    },
+    "8000": {
+      "label": "Metrics API"
+    },
+    "5678": {
+      "label": "Python debugger"
+    }
+  },
+  "postCreateCommand": "if [ -f frontend/.env.local ]; then docker compose up --build -d; else echo 'Create frontend/.env.local before starting Docker Compose'; fi",
+  "postStartCommand": "if [ -f frontend/.env.local ]; then docker compose up -d; fi"
+}
