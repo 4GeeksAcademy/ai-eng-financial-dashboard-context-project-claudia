@@ -42,6 +42,19 @@ These meanings describe the current implementation and glossary, not approved pr
 - For top categories, `limit` is a maximum, not a guaranteed result count. Income movements are currently generated only for `sales` and `others`, so that query may return fewer than five items.
 - Date filters in these routes are inclusive at both ends.
 
+### SPEC-02 refined requirements and known backend gaps
+
+The following alert requirements were confirmed during product refinement after the original source review. They remain requirements; mismatches below are **known backend implementation gaps pending implementation**, not discarded requirements or open product decisions.
+
+| Confirmed requirement | Current backend behavior (source verified) | Status |
+|---|---|---|
+| Calculate each displayed month's baseline as the average of exactly the three preceding monthly periods. | `detect_outcome_alerts` averages all preceding periods in the supplied summary, so the window is cumulative rather than a three-month moving window. | Known backend gap; pending implementation. |
+| For a selected visible date range, use the three monthly periods before its start as lookback context while returning alerts for the selected range. | `get_metrics_alerts` filters movements to `start_date`/`end_date` before summarizing and has no pre-range lookback. | Known backend gap; pending implementation. |
+| Distinguish “no qualifying anomalies” from “insufficient history for three prior months.” | The response model is `list[MetricsAlert]`; an empty array carries no reason/status discriminator. No insufficient-history signal is declared in OpenAPI. | Known backend/API contract gap; define the communication contract during implementation. No response field is assumed here. |
+| UI threshold is constrained to 1–100%, default 30%, and converted to a decimal ratio for the API (`30%` -> `0.3`). | API `threshold` defaults to `0.3`, validates only `ge=0`, and has no maximum; it accepts values below the UI's `0.01` minimum and above `1.0`. | The UI range is confirmed. Wider API validation is a known backend gap pending implementation; no product decision is open. |
+
+The existing alert test checks the response shape only. It does not verify a three-month moving average, pre-range lookback, insufficient-history signaling, or enforcement of the refined UI range by the API. The test was not run for this record.
+
 ## Runtime evidence log
 
 No live Swagger UI results were captured for this review. Complete this table after using **Try it out** in `/docs`:
