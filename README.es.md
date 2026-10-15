@@ -35,11 +35,21 @@ El navegador carga la aplicación React desde Vite. La aplicación solicita `GET
 
 Requisitos: Docker y Docker Compose.
 
+En GitHub Codespaces, crea `frontend/.env.local` antes de iniciar los servicios:
+
+```env
+VITE_API_BASE_URL=https://<nombre-del-codespace>-8000.app.github.dev
+```
+
+Reemplaza `<nombre-del-codespace>` por el nombre que aparece en la URL reenviada del puerto `8000`. Después de iniciar los servicios, abre la pestaña **Ports** y configura los puertos `5173` y `8000` como **Public** desde el menú contextual de cada puerto. Codespaces controla la visibilidad, no `devcontainer.json`. El puerto `8000` expone una API sin autenticación que solo sirve datos sintéticos. La configuración de Codespaces inicia Compose automáticamente cuando existe este archivo; en la primera configuración, créalo y luego ejecuta el comando siguiente. Vite lee la variable al iniciar, así que reinicia el frontend si la cambias.
+
 Desde la raíz del repositorio, ejecuta:
 
 ```bash
 docker compose up --build
 ```
+
+En GitHub Codespaces, `.devcontainer/devcontainer.json` reenvía los puertos `5173` y `8000` y les asigna etiquetas. La visibilidad debe configurarse por separado en la pestaña **Ports**. Reconstruye el Codespace para aplicar cambios en la configuración de reenvío.
 
 Por defecto se utiliza el proxy `/api` de Vite. Para apuntar a otro origen de backend, copia `frontend/.env.example` como `frontend/.env` y configura allí `VITE_API_BASE_URL`.
 
